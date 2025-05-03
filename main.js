@@ -526,7 +526,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
             const vectorText = `
                 \\[
-                \\text{Basis vectors: } i' = (${solution.a}, ${solution.c}), \\; j' = (${solution.b}, ${solution.d})
+                \\text{} i' = (${solution.a}, ${solution.c}), \\; j' = (${solution.b}, ${solution.d})
                 \\]
             `;
 
