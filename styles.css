@@ -218,6 +218,10 @@ canvas {
         color: white !important;
         opacity: 1 !important;
         -webkit-appearance: none;
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent;
     }
 
     button:disabled, button[disabled] {
