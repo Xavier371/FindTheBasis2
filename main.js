@@ -19,51 +19,46 @@ document.addEventListener('DOMContentLoaded', (event) => {
     // Game state variables
     let isFirstGame = true;
     let dragging = null;
-    let moveCounter = 0;
     let gameWon = false;
-    let gameStarted = false;
     let timer = null;
     let elapsedTime = 0;
     let isPaused = false;
     let isShowingInstructions = false;
     let isShowingSolution = false;
+    let hasMovedVector = false;
+    let lastDragged = null;
     
     function getScaledPoint(event, rect) {
-    let x, y;
-    const scaleX = canvas.width / canvas.clientWidth;
-    const scaleY = canvas.height / canvas.clientHeight;
-    
-    if (event.type.includes('touch')) {
-        const touch = event.touches[0];
-        x = (touch.clientX - rect.left) * scaleX;
-        y = (touch.clientY - rect.top) * scaleY;
-    } else {
-        x = (event.clientX - rect.left) * scaleX;
-        y = (event.clientY - rect.top) * scaleY;
+        let x, y;
+        const scaleX = canvas.width / canvas.clientWidth;
+        const scaleY = canvas.height / canvas.clientHeight;
+        
+        if (event.type.includes('touch')) {
+            const touch = event.touches[0];
+            x = (touch.clientX - rect.left) * scaleX;
+            y = (touch.clientY - rect.top) * scaleY;
+        } else {
+            x = (event.clientX - rect.left) * scaleX;
+            y = (event.clientY - rect.top) * scaleY;
+        }
+        
+        return { x, y };
     }
-    
-    return { x, y };
-}
-    // Point generation functions
-    
 
-// Replace your existing getRandomPoint function with this:
+    // Point generation functions
     function getRandomPoint() {
         if (isFirstGame) {
-            // Starting positions for first game
             const startingPoints = [
                 { x: 1, y: 1 },
                 { x: 1, y: -1 },
                 { x: -1, y: 1 },
                 { x: -1, y: -1 }
             ];
-            // Randomly select one of the four starting points
             const randomIndex = Math.floor(Math.random() * startingPoints.length);
-            isFirstGame = false; // Set to false so future points are random
+            isFirstGame = false;
             return startingPoints[randomIndex];
         }
-    
-        // Original random point generation for subsequent games
+
         const min = -5;
         const max = 5;
         let x, y;
@@ -100,7 +95,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         return bestSolution;
     }
 
-                              function generateValidPoints() {
+    function generateValidPoints() {
         let bluePoint, redPoint, solution;
         do {
             bluePoint = getRandomPoint();
@@ -132,7 +127,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
         ctx.clearRect(0, 0, width, height);
         ctx.strokeStyle = 'lightgray';
         
-        // Draw grid lines
         for (let i = -Math.ceil(width / (2 * baseVectorLength)); i <= Math.ceil(width / (2 * baseVectorLength)); i++) {
             ctx.beginPath();
             ctx.moveTo(origin.x + i * baseVectorLength, 0);
@@ -152,19 +146,16 @@ document.addEventListener('DOMContentLoaded', (event) => {
         ctx.strokeStyle = 'black';
         ctx.lineWidth = 2;
 
-        // X-axis
         ctx.beginPath();
         ctx.moveTo(0, origin.y);
         ctx.lineTo(width, origin.y);
         ctx.stroke();
 
-        // Y-axis
         ctx.beginPath();
         ctx.moveTo(origin.x, 0);
         ctx.lineTo(origin.x, height);
         ctx.stroke();
 
-        // Labels
         ctx.font = '16px Arial';
         ctx.fillStyle = 'black';
         ctx.fillText('X', width - 20, origin.y - 10);
@@ -177,7 +168,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
         const dy = end.y - start.y;
         const angle = Math.atan2(dy, dx);
 
-        // Draw line
         ctx.beginPath();
         ctx.moveTo(start.x, start.y);
         ctx.lineTo(end.x, end.y);
@@ -185,7 +175,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // Draw arrowhead
         ctx.beginPath();
         ctx.moveTo(end.x, end.y);
         ctx.lineTo(
@@ -200,7 +189,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
         ctx.fillStyle = color;
         ctx.fill();
 
-        // Add label
         if (label) {
             ctx.font = '16px Arial';
             ctx.fillStyle = color;
@@ -208,15 +196,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }
     }
 
-                              function drawPoints() {
-        // Draw red target point
+    function drawPoints() {
         const redCanvasPoint = gridToCanvas(redPoint);
         ctx.beginPath();
         ctx.arc(redCanvasPoint.x, redCanvasPoint.y, baseVectorLength/10, 0, Math.PI * 2);
         ctx.fillStyle = 'red';
         ctx.fill();
 
-        // Draw blue starting point
         const blueCanvasPoint = gridToCanvas(bluePoint);
         ctx.beginPath();
         ctx.arc(blueCanvasPoint.x, blueCanvasPoint.y, baseVectorLength/10, 0, Math.PI * 2);
@@ -253,7 +239,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
         drawGrid();
         drawAxes();
         
-        // Draw original basis vectors
         drawArrow(origin, 
                  { x: origin.x + initialUnitVectorX.x, y: origin.y + initialUnitVectorX.y }, 
                  'black', 'i');
@@ -261,7 +246,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
                  { x: origin.x + initialUnitVectorY.x, y: origin.y + initialUnitVectorY.y }, 
                  'black', 'j');
 
-        // Draw transformed basis vectors
         const labelIX = (unitVectorX.x !== initialUnitVectorX.x || 
                         unitVectorX.y !== initialUnitVectorX.y) ? "i'" : '';
         const labelJY = (unitVectorY.x !== initialUnitVectorY.x || 
@@ -275,134 +259,250 @@ document.addEventListener('DOMContentLoaded', (event) => {
                  'green', labelJY);
         
         drawPoints();
+
+        // Check if either vector has moved from its initial position
+        if (unitVectorX.x !== initialUnitVectorX.x || 
+            unitVectorX.y !== initialUnitVectorX.y ||
+            unitVectorY.x !== initialUnitVectorY.x || 
+            unitVectorY.y !== initialUnitVectorY.y) {
+            drawTransformedVector();
+        }
     }
 
     function isOnVector(point, vector) {
-    const vectorPoint = { x: origin.x + vector.x, y: origin.y + vector.y };
-    const distance = Math.sqrt(
-        (point.x - vectorPoint.x) ** 2 + 
-        (point.y - vectorPoint.y) ** 2
-    );
-    // Increase the touch area for mobile devices
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const touchArea = isMobile ? baseVectorLength/2 : baseVectorLength/5;
-    
-    // Also check if we're near the vector's line
-    const nearLine = isNearVectorLine(point, origin, vectorPoint);
-    
-    return distance < touchArea || nearLine;
-}
-
-// Add this new helper function right after isOnVector
-function isNearVectorLine(point, start, end) {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const tolerance = isMobile ? 20 : 10; // Larger tolerance for mobile
-
-    // Calculate the distance from point to the line segment
-    const a = point.x - start.x;
-    const b = point.y - start.y;
-    const c = end.x - start.x;
-    const d = end.y - start.y;
-
-    const dot = a * c + b * d;
-    const len_sq = c * c + d * d;
-    
-    // Find the closest point on the line
-    let param = -1;
-    if (len_sq !== 0) param = dot / len_sq;
-
-    let xx, yy;
-
-    if (param < 0) {
-        xx = start.x;
-        yy = start.y;
-    } else if (param > 1) {
-        xx = end.x;
-        yy = end.y;
-    } else {
-        xx = start.x + param * c;
-        yy = start.y + param * d;
+        const vectorPoint = { x: origin.x + vector.x, y: origin.y + vector.y };
+        const distance = Math.sqrt(
+            (point.x - vectorPoint.x) ** 2 + 
+            (point.y - vectorPoint.y) ** 2
+        );
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const baseTouchArea = isMobile ? baseVectorLength/2 : baseVectorLength/5;
+        
+        // Significantly increase detection area near origin
+        const isNearOrigin = Math.abs(vector.x) < 1 && Math.abs(vector.y) < 1;
+        const effectiveTouchArea = isNearOrigin ? baseTouchArea * 3 : baseTouchArea;
+        
+        const nearLine = isNearVectorLine(point, origin, vectorPoint, isNearOrigin);
+        
+        // Add visual feedback when hovering near a vector at origin
+        if (isNearOrigin && (distance < effectiveTouchArea || nearLine)) {
+            ctx.beginPath();
+            ctx.arc(vectorPoint.x, vectorPoint.y, effectiveTouchArea, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0, 255, 0, 0.1)';
+            ctx.fill();
+        }
+        
+        return distance < effectiveTouchArea || nearLine;
     }
 
-    const dx = point.x - xx;
-    const dy = point.y - yy;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+    function isNearVectorLine(point, start, end, isNearOrigin) {
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const baseTolerance = isMobile ? 20 : 10;
+        // Double the tolerance near origin
+        const tolerance = isNearOrigin ? baseTolerance * 2 : baseTolerance;
 
-    return distance < tolerance;
-}
+        const a = point.x - start.x;
+        const b = point.y - start.y;
+        const c = end.x - start.x;
+        const d = end.y - start.y;
 
-                              // Event handlers for both mouse and touch
-    function handlePointerStart(event) {
-    event.preventDefault();
-    if (gameWon || isPaused) return;
+        const dot = a * c + b * d;
+        const len_sq = c * c + d * d;
+        
+        let param = -1;
+        if (len_sq !== 0) param = dot / len_sq;
 
-    const rect = canvas.getBoundingClientRect();
-    const point = getScaledPoint(event, rect);
+        let xx, yy;
 
-    if (isOnVector(point, unitVectorX)) {
-        dragging = 'unitVectorX';
-    } else if (isOnVector(point, unitVectorY)) {
-        dragging = 'unitVectorY';
+        if (param < 0) {
+            xx = start.x;
+            yy = start.y;
+        } else if (param > 1) {
+            xx = end.x;
+            yy = end.y;
+        } else {
+            xx = start.x + param * c;
+            yy = start.y + param * d;
+        }
+
+        const dx = point.x - xx;
+        const dy = point.y - yy;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        return distance < tolerance;
     }
-}
 
     function handlePointerMove(event) {
-    event.preventDefault();
-    if (dragging && !isPaused) {
+        event.preventDefault();
+        if (dragging && !isPaused && !gameWon) {
+            const rect = canvas.getBoundingClientRect();
+            let point;
+            
+            if (event.type.includes('touch')) {
+                const touch = event.touches[0];
+                const x = Math.max(rect.left, Math.min(touch.clientX, rect.right));
+                const y = Math.max(rect.top, Math.min(touch.clientY, rect.bottom));
+                point = getScaledPoint({ type: 'touch', touches: [{ clientX: x, clientY: y }] }, rect);
+            } else {
+                const x = Math.max(rect.left, Math.min(event.clientX, rect.right));
+                const y = Math.max(rect.top, Math.min(event.clientY, rect.bottom));
+                point = getScaledPoint({ type: 'mouse', clientX: x, clientY: y }, rect);
+            }
+
+            const gridPoint = canvasToGrid(point);
+            const snappedX = Math.round(gridPoint.x) * baseVectorLength;
+            const snappedY = Math.round(gridPoint.y) * -baseVectorLength;
+
+            if (dragging === 'unitVectorX') {
+                unitVectorX = { x: snappedX, y: snappedY };
+                hasMovedVector = true;
+            } else if (dragging === 'unitVectorY') {
+                unitVectorY = { x: snappedX, y: snappedY };
+                hasMovedVector = true;
+            }
+            draw();
+        }
+    }
+
+    function handlePointerStart(event) {
+        event.preventDefault();
+        if (gameWon || isPaused) return;
+
         const rect = canvas.getBoundingClientRect();
         const point = getScaledPoint(event, rect);
-        
-        const gridPoint = canvasToGrid(point);
-        const snappedX = Math.round(gridPoint.x) * baseVectorLength;
-        const snappedY = Math.round(gridPoint.y) * -baseVectorLength;
 
-        if (dragging === 'unitVectorX') {
-            unitVectorX = { x: snappedX, y: snappedY };
-        } else if (dragging === 'unitVectorY') {
-            unitVectorY = { x: snappedX, y: snappedY };
+        // Check if exactly one vector is at origin
+        const isXAtOrigin = Math.abs(unitVectorX.x) < 1 && Math.abs(unitVectorX.y) < 1;
+        const isYAtOrigin = Math.abs(unitVectorY.x) < 1 && Math.abs(unitVectorY.y) < 1;
+        
+        if (isXAtOrigin !== isYAtOrigin) { // Exactly one vector is at origin
+            const vectorAtOrigin = isXAtOrigin ? 'unitVectorX' : 'unitVectorY';
+            const vectorNotAtOrigin = isXAtOrigin ? 'unitVectorY' : 'unitVectorX';
+            
+            // If clicking near origin, always grab the vector at origin
+            const distanceToOrigin = Math.sqrt(
+                (point.x - origin.x) ** 2 + 
+                (point.y - origin.y) ** 2
+            );
+            
+            if (distanceToOrigin < baseVectorLength) {
+                dragging = vectorAtOrigin;
+                hasMovedVector = true;
+            } else if (isOnVector(point, eval(vectorNotAtOrigin))) {
+                dragging = vectorNotAtOrigin;
+                hasMovedVector = true;
+            }
+        } else if (isXAtOrigin && isYAtOrigin) {
+            // Both vectors at origin - use existing logic
+            if (isOnVector(point, unitVectorX) && isOnVector(point, unitVectorY)) {
+                const distToX = Math.sqrt(
+                    (point.x - (origin.x + unitVectorX.x)) ** 2 + 
+                    (point.y - (origin.y + unitVectorX.y)) ** 2
+                );
+                const distToY = Math.sqrt(
+                    (point.x - (origin.x + unitVectorY.x)) ** 2 + 
+                    (point.y - (origin.y + unitVectorY.y)) ** 2
+                );
+                
+                if (Math.abs(distToX - distToY) > baseVectorLength/4) {
+                    dragging = distToX < distToY ? 'unitVectorX' : 'unitVectorY';
+                } else {
+                    dragging = lastDragged === 'unitVectorX' ? 'unitVectorY' : 'unitVectorX';
+                }
+                hasMovedVector = true;
+            }
+        } else {
+            // Neither vector at origin - use normal selection
+            if (isOnVector(point, unitVectorX)) {
+                dragging = 'unitVectorX';
+                hasMovedVector = true;
+            } else if (isOnVector(point, unitVectorY)) {
+                dragging = 'unitVectorY';
+                hasMovedVector = true;
+            }
         }
-        draw();
+
+        if (dragging) {
+            lastDragged = dragging;
+        }
     }
-}
 
     function handlePointerEnd(event) {
-    event.preventDefault();  // Add this line
-    dragging = null;
-    // Force a redraw to ensure everything is updated
-    draw();
-}
+        event.preventDefault();
+        if (!gameWon) {
+            dragging = null;
+            draw();
+        }
+    }
 
-    // Add event listeners for both mouse and touch
-   // Replace your existing event listeners with these
+    // Add global mouse move and up handlers to handle dragging outside canvas
+    document.addEventListener('mousemove', handlePointerMove);
+    document.addEventListener('mouseup', handlePointerEnd);
+    document.addEventListener('mouseleave', handlePointerEnd);
+
+    // Canvas-specific event handlers
     canvas.addEventListener('mousedown', handlePointerStart);
-    canvas.addEventListener('mousemove', handlePointerMove);
-    canvas.addEventListener('mouseup', handlePointerEnd);
-    canvas.addEventListener('mouseleave', handlePointerEnd);
-    
-    // Touch event handlers with proper options
     canvas.addEventListener('touchstart', handlePointerStart, { passive: false });
     canvas.addEventListener('touchmove', handlePointerMove, { passive: false });
     canvas.addEventListener('touchend', handlePointerEnd, { passive: false });
-    
-    // Add these two new touch event listeners
     canvas.addEventListener('touchcancel', handlePointerEnd, { passive: false });
-    canvas.addEventListener('touchleave', handlePointerEnd, { passive: false });
     
-    // Also add this to prevent any potential touch issues
     canvas.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         return false;
     }, { passive: false });
 
-    // Game control functions
     function checkWinCondition(transformedPoint) {
         if (Math.round(transformedPoint.x) === redPoint.x && 
             Math.round(transformedPoint.y) === redPoint.y) {
             gameWon = true;
             stopTimer();
+            
+            // Create confetti effect
+            const confetti = document.createElement('div');
+            confetti.style.position = 'fixed';
+            confetti.style.top = '0';
+            confetti.style.left = '0';
+            confetti.style.width = '100%';
+            confetti.style.height = '100%';
+            confetti.style.pointerEvents = 'none';
+            confetti.style.zIndex = '1000';
+            document.body.appendChild(confetti);
+            
+            // Add confetti particles
+            for (let i = 0; i < 150; i++) {
+                const particle = document.createElement('div');
+                particle.style.position = 'absolute';
+                particle.style.width = '8px';
+                particle.style.height = '8px';
+                particle.style.backgroundColor = ['#4CAF50', '#45a049', '#2E7D32', '#A5D6A7'][Math.floor(Math.random() * 4)];
+                particle.style.borderRadius = '50%';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = '-10px';
+                particle.style.transform = `rotate(${Math.random() * 360}deg)`;
+                particle.style.animation = `fall ${1 + Math.random() * 2}s linear forwards`;
+                confetti.appendChild(particle);
+            }
+            
+            // Add animation style
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fall {
+                    to {
+                        transform: translateY(100vh) rotate(${360 + Math.random() * 360}deg);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Remove confetti after animation
+            setTimeout(() => {
+                document.body.removeChild(confetti);
+                document.head.removeChild(style);
+            }, 3000);
+
             document.getElementById('winMessage').innerText = 
-                `Congratulations! You won in ${moveCounter} moves and ${elapsedTime} seconds!`;
-            disableButtonsAfterWin();
+                `Congratulations! You won in ${elapsedTime} seconds!`;
         }
     }
 
@@ -422,7 +522,6 @@ function isNearVectorLine(point, start, end) {
         timer = null;
     }
 
-                              // Overlay control functions
     function toggleInstructions() {
         isShowingInstructions = !isShowingInstructions;
         const overlay = document.getElementById('instructionsOverlay');
@@ -442,7 +541,6 @@ function isNearVectorLine(point, start, end) {
         
         if (isShowingSolution) {
             isPaused = true;
-            // Update solution display with MathJax formatting
             const equationText = `
                 \\[
                 \\begin{bmatrix}
@@ -470,112 +568,82 @@ function isNearVectorLine(point, start, end) {
                 \\]
             `;
 
-            const vectorText = `
-                \\[
-                \\text{Basis vectors: } i' = (${solution.a}, ${solution.c}), \\; j' = (${solution.b}, ${solution.d})
-                \\]
-            `;
-
             document.getElementById('equation').innerHTML = equationText;
             document.getElementById('equationText').innerHTML = systemText;
-            document.getElementById('vectorMapping').innerHTML = vectorText;
+            document.getElementById('vectorMapping').innerHTML = '';
             
-            // Trigger MathJax to process the new content
             MathJax.typeset();
-        } else {
-            isPaused = false;
-            draw();
         }
         
         overlay.style.display = isShowingSolution ? 'block' : 'none';
+        
+        if (!isShowingSolution) {
+            isPaused = false;
+            draw();
+        }
     }
 
     function togglePause() {
-        if (gameWon) return;
-        
         isPaused = !isPaused;
         document.getElementById('pauseButton').innerText = isPaused ? 'Resume' : 'Pause';
         
         if (isPaused) {
             stopTimer();
+            // Only draw grid and axes when paused
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawGrid();
             drawAxes();
         } else {
-            startTimer();
+            if (!gameWon) {
+                startTimer();
+            }
+            // Restore all vectors and points
             draw();
         }
     }
 
-    // Button event listeners
     document.getElementById('howToPlayButton').addEventListener('click', toggleInstructions);
     document.getElementById('backToGameButton').addEventListener('click', toggleInstructions);
     document.getElementById('solveButton').addEventListener('click', toggleSolution);
     document.getElementById('backFromSolutionButton').addEventListener('click', toggleSolution);
 
-    document.getElementById('goButton').addEventListener('click', () => {
-        if (gameWon || isShowingInstructions || isShowingSolution) return;
-        if (!gameStarted) {
-            gameStarted = true;
-            draw();
-            startTimer();
-        }
-        moveCounter += 1;
-        document.getElementById('moveCounter').innerText = moveCounter;
-        drawTransformedVector();
-    });
-
     document.getElementById('resetButton').addEventListener('click', () => {
-    // Add this line to ensure the next game uses random points
         isFirstGame = false;
         
-        // Generate new points and reset game state
+        // Stop any ongoing dragging
+        dragging = null;
+        
         const points = generateValidPoints();
         bluePoint = points.bluePoint;
         redPoint = points.redPoint;
         solution = points.solution;
         
-        // Reset vectors
         unitVectorX = { ...initialUnitVectorX };
         unitVectorY = { ...initialUnitVectorY };
         
-        // Reset game state
-        moveCounter = 0;
         gameWon = false;
-        gameStarted = false;
         elapsedTime = 0;
         isPaused = false;
         isShowingInstructions = false;
         isShowingSolution = false;
+        hasMovedVector = false;
         
-        // Reset UI elements
-        document.getElementById('goButton').disabled = false;
-        document.getElementById('pauseButton').disabled = false;
-        document.getElementById('moveCounter').innerText = moveCounter;
         document.getElementById('winMessage').innerText = '';
         document.getElementById('timer').innerText = `Timer: ${elapsedTime} seconds`;
         document.getElementById('instructionsOverlay').style.display = 'none';
         document.getElementById('solutionOverlay').style.display = 'none';
         document.getElementById('pauseButton').innerText = 'Pause';
         
-        // Reset display
+        // Force pointer end to clean up any lingering drag states
+        handlePointerEnd({ preventDefault: () => {} });
+        
         draw();
         stopTimer();
         startTimer();
     });
     
-    document.getElementById('pauseButton').addEventListener('click', () => {
-        if (!gameWon) {
-            togglePause();
-        }
-    });
+    document.getElementById('pauseButton').addEventListener('click', togglePause);
     
-    function disableButtonsAfterWin() {
-        document.getElementById('goButton').disabled = true;
-        document.getElementById('pauseButton').disabled = true;
-    }
-    
-    // Mobile touch event prevention
     document.addEventListener('touchstart', (e) => {
         if (e.target === canvas) {
             e.preventDefault();
@@ -588,7 +656,6 @@ function isNearVectorLine(point, start, end) {
         }
     }, { passive: false });
     
-    // Handle window resize
     function handleResize() {
         const displayWidth = Math.min(600, window.innerWidth - 40);
         const scale = displayWidth / canvas.width;
@@ -600,9 +667,50 @@ function isNearVectorLine(point, start, end) {
     window.addEventListener('resize', handleResize);
     handleResize();
     
-    // Initialize game
     draw();
     startTimer();
-});
 
+    // Add touch event listeners for the buttons
+    document.getElementById('solveButton').addEventListener('touchend', (e) => {
+        e.preventDefault();
+        toggleSolution();
+    });
 
+    document.getElementById('pauseButton').addEventListener('touchend', (e) => {
+        e.preventDefault();
+        togglePause();
+    });
+
+    // Remove old touch event listeners and add new ones with better mobile handling
+    const pauseButton = document.getElementById('pauseButton');
+    const solveButton = document.getElementById('solveButton');
+
+    // Function to handle both click and touch
+    function handleButtonPress(e) {
+        e.preventDefault();  // Prevent any default behavior
+        e.stopPropagation(); // Stop event from bubbling
+        if (e.target.id === 'pauseButton') {
+            togglePause();
+        } else if (e.target.id === 'solveButton') {
+            toggleSolution();
+        }
+    }
+
+    // Remove any existing listeners
+    pauseButton.replaceWith(pauseButton.cloneNode(true));
+    solveButton.replaceWith(solveButton.cloneNode(true));
+
+    // Get fresh references after replacing
+    const newPauseButton = document.getElementById('pauseButton');
+    const newSolveButton = document.getElementById('solveButton');
+
+    // Add all event listeners
+    ['click', 'touchstart'].forEach(eventType => {
+        newPauseButton.addEventListener(eventType, handleButtonPress, { passive: false });
+        newSolveButton.addEventListener(eventType, handleButtonPress, { passive: false });
+    });
+
+    // Prevent double-firing on mobile
+    newPauseButton.addEventListener('touchend', e => e.preventDefault());
+    newSolveButton.addEventListener('touchend', e => e.preventDefault());
+}); 
