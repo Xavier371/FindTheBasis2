@@ -551,10 +551,15 @@ document.addEventListener('DOMContentLoaded', (event) => {
         
         if (isPaused) {
             stopTimer();
+            // Only draw grid and axes when paused
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawGrid();
+            drawAxes();
         } else {
             if (!gameWon) {
                 startTimer();
             }
+            // Restore all vectors and points
             draw();
         }
     }
