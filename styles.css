@@ -206,6 +206,8 @@ canvas {
         max-width: 300px;
         margin: 0 auto;
         padding: 0;
+        touch-action: manipulation;
+        -webkit-touch-callout: none;
     }
 
     button {
@@ -222,12 +224,13 @@ canvas {
         user-select: none;
         -webkit-user-select: none;
         -webkit-tap-highlight-color: transparent;
+        cursor: pointer !important;
+        pointer-events: auto !important;
     }
 
-    button:disabled, button[disabled] {
-        background-color: #4CAF50 !important;
-        color: white !important;
-        opacity: 1 !important;
+    button:active {
+        background-color: #45a049 !important;
+        transform: translateY(1px);
     }
 
     #howToPlayButton {
