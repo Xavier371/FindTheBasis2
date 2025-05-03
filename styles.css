@@ -72,6 +72,11 @@ button {
     min-width: 100px;
     text-align: center;
     flex-shrink: 0;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
 }
 
 button:hover {
@@ -197,14 +202,17 @@ canvas {
         grid-template-columns: repeat(2, 1fr);
         gap: 8px;
         width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
     }
 
     button {
         width: 100%;
-        padding: 12px 10px;
-        font-size: 14px;
+        padding: 8px;
+        font-size: 16px;
         margin: 0;
         min-width: 0;
+        height: 40px;
     }
 
     #howToPlayButton {
