@@ -12,14 +12,12 @@
     <h1>Interactive Transformation</h1>
     <p class="instruction-tagline">Drag and drop the green arrows so that the blue point falls on the red</p>
     <div class="game-info">
-        <span>Moves: <span id="moveCounter">0</span></span>
+        <span id="winMessage"></span>
         <span id="timer">Timer: 0 seconds</span>
-        <p id="winMessage"></p>
     </div>
-    <div class="button-container mobile-button-grid">
-        <button id="howToPlayButton" class="full-width">How To Play</button>
+    <div class="button-container">
         <div class="button-grid">
-            <button id="goButton">Go</button>
+            <button id="howToPlayButton">How To Play</button>
             <button id="resetButton">Reset</button>
             <button id="pauseButton">Pause</button>
             <button id="solveButton">Solve</button>
@@ -30,14 +28,20 @@
         <h2>How to Play</h2>
         <div class="instruction-content">
             <div class="instruction-text">
-                <p>Think of the unit vectors (1,0), (0,1) as the basis for the standard xy plane</p>
+                <p>Consider the standard basis vectors \(i = (1,0)\) and \(j = (0,1)\)</p>
                 <ol>
-                    <li>Your goal is to drag and drop the green basis vectors (i' and j') to apply a transformation on the grid that maps blue on to red</li>
-                    <li>It may be a rotation, reflection, or scaling, or all three </li>
-                    <li>i' acts on the x component of blue and j' acts on the y component of blue, together they form a 2x2 matrix </li>
-                    <li>Click "Go" to see how the current orientation transforms the space</li>
-                    <li>Click solve to see the correct transormation (solution not unique)</li>
+                    <li>Your goal is to drag and drop the green basis vectors (\(i'\) and \(j'\)) to apply a transformation on the grid that maps blue on to red</li>
+                    <li>It may be a rotation, reflection, or scaling, or all three</li>
+                    <li>\(i'\) acts on the \(x\) component of blue and \(j'\) acts on the \(y\) component of blue, together they form a \(2 \times 2\) matrix:
+                        \[A = \begin{bmatrix} 
+                        i'_x & j'_x \\
+                        i'_y & j'_y
+                        \end{bmatrix}\]
+                        The goal is to have \(Ax = b\) where \(x\) is the blue vector, \(b\) is the red vector, and the light blue vector is \(Ax\)
+                    </li>
+                    <li>As you move the green vectors, you'll see the light blue transformed vector update in real-time</li>
                     <li>Try to make the light blue (image) vector land on the red point</li>
+                    <li>Click solve to see one possible solution matrix (solutions are not unique)</li>
                 </ol>
                 <div class="gif-container">
                     <img src="tutorial.gif" alt="How to play demonstration" class="tutorial-gif">
@@ -57,7 +61,4 @@
     </div>
     <script src="main.js"></script>
 </body>
-</html>
-
-
-
+</html> 
