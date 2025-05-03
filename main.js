@@ -535,12 +535,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
             document.getElementById('vectorMapping').innerHTML = vectorText;
             
             MathJax.typeset();
-        } else {
-            isPaused = false;
-            draw();
         }
         
         overlay.style.display = isShowingSolution ? 'block' : 'none';
+        
+        if (!isShowingSolution) {
+            isPaused = false;
+            draw();
+        }
     }
 
     function togglePause() {
@@ -549,9 +551,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
         
         if (isPaused) {
             stopTimer();
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawGrid();
-            drawAxes();
         } else {
             if (!gameWon) {
                 startTimer();
@@ -627,4 +626,15 @@ document.addEventListener('DOMContentLoaded', (event) => {
     
     draw();
     startTimer();
+
+    // Add touch event listeners for the buttons
+    document.getElementById('solveButton').addEventListener('touchend', (e) => {
+        e.preventDefault();
+        toggleSolution();
+    });
+
+    document.getElementById('pauseButton').addEventListener('touchend', (e) => {
+        e.preventDefault();
+        togglePause();
+    });
 }); 
