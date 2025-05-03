@@ -459,6 +459,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
             stopTimer();
             document.getElementById('winMessage').innerText = 
                 `Congratulations! You won in ${elapsedTime} seconds! `;
+            // Disable pause and solve buttons
+            document.getElementById('pauseButton').disabled = true;
+            document.getElementById('solveButton').disabled = true;
         }
     }
 
@@ -591,6 +594,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
         document.getElementById('instructionsOverlay').style.display = 'none';
         document.getElementById('solutionOverlay').style.display = 'none';
         document.getElementById('pauseButton').innerText = 'Pause';
+        // Re-enable pause and solve buttons
+        document.getElementById('pauseButton').disabled = false;
+        document.getElementById('solveButton').disabled = false;
         
         // Force pointer end to clean up any lingering drag states
         handlePointerEnd({ preventDefault: () => {} });
