@@ -642,4 +642,37 @@ document.addEventListener('DOMContentLoaded', (event) => {
         e.preventDefault();
         togglePause();
     });
+
+    // Remove old touch event listeners and add new ones with better mobile handling
+    const pauseButton = document.getElementById('pauseButton');
+    const solveButton = document.getElementById('solveButton');
+
+    // Function to handle both click and touch
+    function handleButtonPress(e) {
+        e.preventDefault();  // Prevent any default behavior
+        e.stopPropagation(); // Stop event from bubbling
+        if (e.target.id === 'pauseButton') {
+            togglePause();
+        } else if (e.target.id === 'solveButton') {
+            toggleSolution();
+        }
+    }
+
+    // Remove any existing listeners
+    pauseButton.replaceWith(pauseButton.cloneNode(true));
+    solveButton.replaceWith(solveButton.cloneNode(true));
+
+    // Get fresh references after replacing
+    const newPauseButton = document.getElementById('pauseButton');
+    const newSolveButton = document.getElementById('solveButton');
+
+    // Add all event listeners
+    ['click', 'touchstart'].forEach(eventType => {
+        newPauseButton.addEventListener(eventType, handleButtonPress, { passive: false });
+        newSolveButton.addEventListener(eventType, handleButtonPress, { passive: false });
+    });
+
+    // Prevent double-firing on mobile
+    newPauseButton.addEventListener('touchend', e => e.preventDefault());
+    newSolveButton.addEventListener('touchend', e => e.preventDefault());
 }); 
