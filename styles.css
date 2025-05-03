@@ -82,11 +82,6 @@ button:hover {
     background-color: #45a049;
 }
 
-button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-}
-
 canvas {
     border: 1px solid black;
     background-color: white;
