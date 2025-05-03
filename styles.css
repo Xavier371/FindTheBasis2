@@ -29,51 +29,86 @@ h1 {
     text-align: center;
     margin: 5px 0;
     font-size: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    min-height: 30px;
 }
 
 .game-info span {
-    margin: 0 15px;
     display: inline-block;
 }
 
 #winMessage {
     color: #4CAF50;
     font-weight: bold;
-    margin: 10px 0;
+    font-size: 24px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    background-color: rgba(74, 175, 80, 0.1);
+    box-shadow: 0 0 10px rgba(74, 175, 80, 0.2);
+    animation: winPulse 2s infinite;
+}
+
+@keyframes winPulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 10px rgba(74, 175, 80, 0.2);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px rgba(74, 175, 80, 0.4);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 10px rgba(74, 175, 80, 0.2);
+    }
 }
 
 .button-container {
-    margin: 10px 0;
     display: flex;
-    gap: 10px;
     justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
+    margin: 10px 0;
     width: 100%;
-    max-width: 600px;
-    padding: 0 20px;
-    box-sizing: border-box;
+}
+
+.button-grid {
+    display: flex;
+    gap: 8px;
+    margin: 0 auto;
+    justify-content: center;
+    flex-wrap: nowrap;
 }
 
 button {
-    padding: 10px 20px;
+    padding: 12px;
     font-size: 16px;
+    font-family: Arial, sans-serif;
     cursor: pointer;
-    background-color: #4CAF50;
-    color: white;
+    background-color: #4CAF50 !important;
+    color: white !important;
     border: none;
     border-radius: 5px;
     transition: background-color 0.3s;
-    min-width: 100px;
+    text-align: center;
+    width: 120px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    -webkit-appearance: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
-button:hover {
-    background-color: #45a049;
-}
-
-button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
+button:hover, button:active, button:disabled, button[disabled] {
+    background-color: #45a049 !important;
+    color: white !important;
+    opacity: 1 !important;
+    cursor: pointer !important;
 }
 
 canvas {
@@ -188,16 +223,36 @@ canvas {
     .button-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
+        gap: 10px;
         width: 100%;
+        max-width: 300px;
+        margin: 0 auto;
+        padding: 0;
+        touch-action: manipulation;
+        -webkit-touch-callout: none;
     }
 
     button {
         width: 100%;
-        padding: 12px 10px;
-        font-size: 14px;
+        height: 40px;
+        padding: 8px;
+        font-size: 15px;
         margin: 0;
-        min-width: 0;
+        background-color: #4CAF50 !important;
+        color: white !important;
+        opacity: 1 !important;
+        -webkit-appearance: none;
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        cursor: pointer !important;
+        pointer-events: auto !important;
+    }
+
+    button:active {
+        background-color: #45a049 !important;
+        transform: translateY(1px);
     }
 
     #howToPlayButton {
@@ -230,17 +285,30 @@ canvas {
         -ms-user-select: none;
         user-select: none;
     }
+
+    #winMessage {
+        font-size: 18px;
+        padding: 8px 15px;
+    }
 }
 
-/* For even smaller screens */
+/* Remove duplicate media queries */
 @media (max-width: 320px) {
     button {
-        font-size: 13px;
-        padding: 10px 8px;
-    }
-
-    .game-info {
         font-size: 14px;
+    }
+}
+
+/* Remove the duplicate button styles in the 600px media query */
+@media (max-width: 600px) {
+    .button-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        width: 100%;
+        max-width: 300px;
+        margin: 0 auto;
+        padding: 0;
     }
 }
 
@@ -255,7 +323,4 @@ canvas {
     .tutorial-gif {
         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
-}
-
-
-
+} 
