@@ -235,40 +235,84 @@ document.addEventListener('DOMContentLoaded', (event) => {
         checkWinCondition(transformedBluePoint);
     }
 
+    function drawTransformedGrid() {
+        // How many grid lines to draw in each direction
+        const numLines = Math.ceil(Math.max(width, height) / baseVectorLength) + 2;
+        // How far to extend each line — must reach any canvas corner from any offset
+        // Canvas diagonal is ~850px; a vector step is at least baseVectorLength (50px), so 20 steps is safe
+        const ext = Math.ceil(Math.max(width, height) / baseVectorLength * 1.5) + 4;
+
+        ctx.save();
+        ctx.strokeStyle = 'rgba(50, 50, 50, 0.55)';
+        ctx.lineWidth = 1;
+
+        for (let k = -numLines; k <= numLines; k++) {
+            // Lines of constant i-index: parallel to unitVectorY, offset by k*unitVectorX
+            ctx.beginPath();
+            ctx.moveTo(
+                origin.x + k * unitVectorX.x - ext * unitVectorY.x,
+                origin.y + k * unitVectorX.y - ext * unitVectorY.y
+            );
+            ctx.lineTo(
+                origin.x + k * unitVectorX.x + ext * unitVectorY.x,
+                origin.y + k * unitVectorX.y + ext * unitVectorY.y
+            );
+            ctx.stroke();
+
+            // Lines of constant j-index: parallel to unitVectorX, offset by k*unitVectorY
+            ctx.beginPath();
+            ctx.moveTo(
+                origin.x - ext * unitVectorX.x + k * unitVectorY.x,
+                origin.y - ext * unitVectorX.y + k * unitVectorY.y
+            );
+            ctx.lineTo(
+                origin.x + ext * unitVectorX.x + k * unitVectorY.x,
+                origin.y + ext * unitVectorX.y + k * unitVectorY.y
+            );
+            ctx.stroke();
+        }
+
+        ctx.restore();
+    }
+
     function draw() {
         if (isShowingInstructions) return;
-        
+
         drawGrid();
+
+        const vectorsMoved = (
+            unitVectorX.x !== initialUnitVectorX.x ||
+            unitVectorX.y !== initialUnitVectorX.y ||
+            unitVectorY.x !== initialUnitVectorY.x ||
+            unitVectorY.y !== initialUnitVectorY.y
+        );
+
+        if (isShowingSolution) drawTransformedGrid();
+
         drawAxes();
-        
-        drawArrow(origin, 
-                 { x: origin.x + initialUnitVectorX.x, y: origin.y + initialUnitVectorX.y }, 
+
+        drawArrow(origin,
+                 { x: origin.x + initialUnitVectorX.x, y: origin.y + initialUnitVectorX.y },
                  'black', 'i');
-        drawArrow(origin, 
-                 { x: origin.x + initialUnitVectorY.x, y: origin.y + initialUnitVectorY.y }, 
+        drawArrow(origin,
+                 { x: origin.x + initialUnitVectorY.x, y: origin.y + initialUnitVectorY.y },
                  'black', 'j');
 
-        const labelIX = (unitVectorX.x !== initialUnitVectorX.x || 
+        const labelIX = (unitVectorX.x !== initialUnitVectorX.x ||
                         unitVectorX.y !== initialUnitVectorX.y) ? "i'" : '';
-        const labelJY = (unitVectorY.x !== initialUnitVectorY.x || 
+        const labelJY = (unitVectorY.x !== initialUnitVectorY.x ||
                         unitVectorY.y !== initialUnitVectorY.y) ? "j'" : '';
-        
-        drawArrow(origin, 
-                 { x: origin.x + unitVectorX.x, y: origin.y + unitVectorX.y }, 
+
+        drawArrow(origin,
+                 { x: origin.x + unitVectorX.x, y: origin.y + unitVectorX.y },
                  'green', labelIX);
-        drawArrow(origin, 
-                 { x: origin.x + unitVectorY.x, y: origin.y + unitVectorY.y }, 
+        drawArrow(origin,
+                 { x: origin.x + unitVectorY.x, y: origin.y + unitVectorY.y },
                  'green', labelJY);
-        
+
         drawPoints();
 
-        // Check if either vector has moved from its initial position
-        if (unitVectorX.x !== initialUnitVectorX.x || 
-            unitVectorX.y !== initialUnitVectorX.y ||
-            unitVectorY.x !== initialUnitVectorY.x || 
-            unitVectorY.y !== initialUnitVectorY.y) {
-            drawTransformedVector();
-        }
+        if (vectorsMoved) drawTransformedVector();
     }
 
     function isOnVector(point, vector) {
