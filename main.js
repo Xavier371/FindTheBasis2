@@ -27,6 +27,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
     let isShowingSolution = false;
     let hasMovedVector = false;
     let lastDragged = null;
+    let isAnimating = false;
+    let animationId = null;
     
     function getScaledPoint(event, rect) {
         let x, y;
@@ -234,7 +236,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 
     function draw() {
-        if (isShowingInstructions || isShowingSolution) return;
+        if (isShowingInstructions) return;
         
         drawGrid();
         drawAxes();
@@ -453,56 +455,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }, { passive: false });
 
     function checkWinCondition(transformedPoint) {
-        if (Math.round(transformedPoint.x) === redPoint.x && 
+        if (isAnimating) return;
+        if (Math.round(transformedPoint.x) === redPoint.x &&
             Math.round(transformedPoint.y) === redPoint.y) {
             gameWon = true;
             stopTimer();
-            
-            // Create confetti effect
-            const confetti = document.createElement('div');
-            confetti.style.position = 'fixed';
-            confetti.style.top = '0';
-            confetti.style.left = '0';
-            confetti.style.width = '100%';
-            confetti.style.height = '100%';
-            confetti.style.pointerEvents = 'none';
-            confetti.style.zIndex = '1000';
-            document.body.appendChild(confetti);
-            
-            // Add confetti particles
-            for (let i = 0; i < 150; i++) {
-                const particle = document.createElement('div');
-                particle.style.position = 'absolute';
-                particle.style.width = '8px';
-                particle.style.height = '8px';
-                particle.style.backgroundColor = ['#4CAF50', '#45a049', '#2E7D32', '#A5D6A7'][Math.floor(Math.random() * 4)];
-                particle.style.borderRadius = '50%';
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.top = '-10px';
-                particle.style.transform = `rotate(${Math.random() * 360}deg)`;
-                particle.style.animation = `fall ${1 + Math.random() * 2}s linear forwards`;
-                confetti.appendChild(particle);
-            }
-            
-            // Add animation style
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes fall {
-                    to {
-                        transform: translateY(100vh) rotate(${360 + Math.random() * 360}deg);
-                    }
-                }
-            `;
-            document.head.appendChild(style);
-            
-            // Remove confetti after animation
-            setTimeout(() => {
-                document.body.removeChild(confetti);
-                document.head.removeChild(style);
-            }, 3000);
-
             document.getElementById('winMessage').innerText = 
-                `Congratulations! You won in ${elapsedTime} seconds!`;
+                `Congratulations! You won in ${elapsedTime} seconds! `;
         }
     }
 
@@ -535,52 +494,107 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }
     }
 
+    function showSolutionText() {
+        const equationText = `
+            \\[
+            {\\color{green}\\begin{bmatrix} i_x & j_x \\\\ i_y & j_y \\end{bmatrix}}
+            {\\color{blue}\\begin{bmatrix} ${bluePoint.x} \\\\ ${bluePoint.y} \\end{bmatrix}}
+            =
+            {\\color{red}\\begin{bmatrix} ${redPoint.x} \\\\ ${redPoint.y} \\end{bmatrix}}
+            \\]
+        `;
+
+        const systemText = `
+            \\[
+            \\begin{aligned}
+            {\\color{green}i_x}({\\color{blue}${bluePoint.x}}) + {\\color{green}j_x}({\\color{blue}${bluePoint.y}}) &= {\\color{red}${redPoint.x}} \\\\
+            {\\color{green}i_y}({\\color{blue}${bluePoint.x}}) + {\\color{green}j_y}({\\color{blue}${bluePoint.y}}) &= {\\color{red}${redPoint.y}}
+            \\end{aligned}
+            \\]
+        `;
+
+        const solutionValues = `
+            \\[
+            \\begin{alignedat}{2}
+            {\\color{green}i_x} &= {\\color{green}${solution.a}}, &\\quad {\\color{green}j_x} &= {\\color{green}${solution.b}} \\\\
+            {\\color{green}i_y} &= {\\color{green}${solution.c}}, &\\quad {\\color{green}j_y} &= {\\color{green}${solution.d}}
+            \\end{alignedat}
+            \\]
+        `;
+
+        const vectorText = `
+            \\[
+            i' = ({\\color{green}${solution.a}}, {\\color{green}${solution.c}}), \\; j' = ({\\color{green}${solution.b}}, {\\color{green}${solution.d}})
+            \\]
+        `;
+
+        document.getElementById('equation').innerHTML = equationText;
+        document.getElementById('equationText').innerHTML = systemText;
+        document.getElementById('solutionText').innerHTML = solutionValues;
+        document.getElementById('vectorMapping').innerHTML = vectorText;
+
+        document.getElementById('solutionOverlay').style.display = 'block';
+        MathJax.typeset();
+    }
+
     function toggleSolution() {
-        isShowingSolution = !isShowingSolution;
-        const overlay = document.getElementById('solutionOverlay');
-        
-        if (isShowingSolution) {
-            isPaused = true;
-            const equationText = `
-                \\[
-                \\begin{bmatrix}
-                ${solution.a} & ${solution.b} \\\\
-                ${solution.c} & ${solution.d} \\\\
-                \\end{bmatrix}
-                \\begin{bmatrix}
-                ${bluePoint.x} \\\\
-                ${bluePoint.y} \\\\
-                \\end{bmatrix}
-                =
-                \\begin{bmatrix}
-                ${redPoint.x} \\\\
-                ${redPoint.y} \\\\
-                \\end{bmatrix}
-                \\]
-            `;
-
-            const systemText = `
-                \\[
-                \\begin{aligned}
-                ${solution.a}(${bluePoint.x}) + ${solution.b}(${bluePoint.y}) &= ${redPoint.x} \\\\
-                ${solution.c}(${bluePoint.x}) + ${solution.d}(${bluePoint.y}) &= ${redPoint.y}
-                \\end{aligned}
-                \\]
-            `;
-
-            document.getElementById('equation').innerHTML = equationText;
-            document.getElementById('equationText').innerHTML = systemText;
-            document.getElementById('vectorMapping').innerHTML = '';
-            
-            MathJax.typeset();
+        // Cancel any in-progress animation
+        if (animationId) {
+            cancelAnimationFrame(animationId);
+            animationId = null;
         }
-        
-        overlay.style.display = isShowingSolution ? 'block' : 'none';
-        
-        if (!isShowingSolution) {
-            isPaused = false;
+
+        isShowingSolution = true;
+        isAnimating = true;
+        hasMovedVector = true;
+        gameWon = false;
+
+        // Always restart from initial positions so animation is visible every time
+        unitVectorX = { ...initialUnitVectorX };
+        unitVectorY = { ...initialUnitVectorY };
+
+        // Hide win message and timer immediately
+        document.getElementById('winMessage').style.visibility = 'hidden';
+        document.getElementById('timer').style.visibility = 'hidden';
+
+        // Show solution text right away, before animation begins
+        showSolutionText();
+
+        const startX = { ...unitVectorX };
+        const startY = { ...unitVectorY };
+        const targetX = { x: solution.a * baseVectorLength, y: -solution.c * baseVectorLength };
+        const targetY = { x: solution.b * baseVectorLength, y: -solution.d * baseVectorLength };
+        const duration = 1500; // ms
+        const startTime = performance.now();
+
+        function frame(currentTime) {
+            const t = Math.min((currentTime - startTime) / duration, 1);
+            // Smooth ease-in-out
+            const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+
+            unitVectorX = {
+                x: startX.x + (targetX.x - startX.x) * ease,
+                y: startX.y + (targetX.y - startX.y) * ease
+            };
+            unitVectorY = {
+                x: startY.x + (targetY.x - startY.x) * ease,
+                y: startY.y + (targetY.y - startY.y) * ease
+            };
+
             draw();
+
+            if (t < 1) {
+                animationId = requestAnimationFrame(frame);
+            } else {
+                animationId = null;
+                isAnimating = false;
+                unitVectorX = targetX;
+                unitVectorY = targetY;
+                draw(); // triggers win condition now that isAnimating is false
+            }
         }
+
+        animationId = requestAnimationFrame(frame);
     }
 
     function togglePause() {
@@ -605,11 +619,17 @@ document.addEventListener('DOMContentLoaded', (event) => {
     document.getElementById('howToPlayButton').addEventListener('click', toggleInstructions);
     document.getElementById('backToGameButton').addEventListener('click', toggleInstructions);
     document.getElementById('solveButton').addEventListener('click', toggleSolution);
-    document.getElementById('backFromSolutionButton').addEventListener('click', toggleSolution);
 
     document.getElementById('resetButton').addEventListener('click', () => {
         isFirstGame = false;
-        
+
+        // Cancel any solve animation
+        if (animationId) {
+            cancelAnimationFrame(animationId);
+            animationId = null;
+        }
+        isAnimating = false;
+
         // Stop any ongoing dragging
         dragging = null;
         
@@ -628,6 +648,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
         isShowingSolution = false;
         hasMovedVector = false;
         
+        document.getElementById('winMessage').style.visibility = '';
+        document.getElementById('timer').style.visibility = '';
         document.getElementById('winMessage').innerText = '';
         document.getElementById('timer').innerText = `Timer: ${elapsedTime} seconds`;
         document.getElementById('instructionsOverlay').style.display = 'none';
