@@ -317,10 +317,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     function isOnVector(point, vector) {
         const vectorPoint = { x: origin.x + vector.x, y: origin.y + vector.y };
-        const distance = Math.sqrt(
-            (point.x - vectorPoint.x) ** 2 + 
-            (point.y - vectorPoint.y) ** 2
-        );
+        const dx0 = point.x - vectorPoint.x;
+        const dy0 = point.y - vectorPoint.y;
+        const distance = Math.sqrt(dx0 * dx0 + dy0 * dy0);
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         const baseTouchArea = isMobile ? baseVectorLength/2 : baseVectorLength/5;
         
@@ -426,10 +425,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
             const vectorNotAtOrigin = isXAtOrigin ? 'unitVectorY' : 'unitVectorX';
             
             // If clicking near origin, always grab the vector at origin
-            const distanceToOrigin = Math.sqrt(
-                (point.x - origin.x) ** 2 + 
-                (point.y - origin.y) ** 2
-            );
+            const dox = point.x - origin.x;
+            const doy = point.y - origin.y;
+            const distanceToOrigin = Math.sqrt(dox * dox + doy * doy);
             
             if (distanceToOrigin < baseVectorLength) {
                 dragging = vectorAtOrigin;
@@ -504,8 +502,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
             Math.round(transformedPoint.y) === redPoint.y) {
             gameWon = true;
             stopTimer();
-            document.getElementById('winMessage').innerText = 
-                `Congratulations! You won in ${elapsedTime} seconds! `;
+            document.getElementById('winMessage').innerText =
+                'Congratulations! You won in ' + elapsedTime + ' seconds! ';
+            if (!isShowingSolution) setTimeout(toggleSolution, 500);
         }
     }
 
