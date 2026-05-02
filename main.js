@@ -434,7 +434,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
             if (distanceToOrigin < baseVectorLength) {
                 dragging = vectorAtOrigin;
                 hasMovedVector = true;
-            } else if (isOnVector(point, eval(vectorNotAtOrigin))) {
+            } else if (isOnVector(point, isXAtOrigin ? unitVectorY : unitVectorX)) {
                 dragging = vectorNotAtOrigin;
                 hasMovedVector = true;
             }
