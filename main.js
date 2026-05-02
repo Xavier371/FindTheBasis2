@@ -538,7 +538,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }
     }
 
-    function showSolutionText() {
+    function showSolutionText(a, b, c, d) {
         const equationText = `
             \\[
             {\\color{green}\\begin{bmatrix} i_x & j_x \\\\ i_y & j_y \\end{bmatrix}}
@@ -560,15 +560,15 @@ document.addEventListener('DOMContentLoaded', (event) => {
         const solutionValues = `
             \\[
             \\begin{alignedat}{2}
-            {\\color{green}i_x} &= {\\color{green}${solution.a}}, &\\quad {\\color{green}j_x} &= {\\color{green}${solution.b}} \\\\
-            {\\color{green}i_y} &= {\\color{green}${solution.c}}, &\\quad {\\color{green}j_y} &= {\\color{green}${solution.d}}
+            {\\color{green}i_x} &= {\\color{green}${a}}, &\\quad {\\color{green}j_x} &= {\\color{green}${b}} \\\\
+            {\\color{green}i_y} &= {\\color{green}${c}}, &\\quad {\\color{green}j_y} &= {\\color{green}${d}}
             \\end{alignedat}
             \\]
         `;
 
         const vectorText = `
             \\[
-            i' = ({\\color{green}${solution.a}}, {\\color{green}${solution.c}}), \\; j' = ({\\color{green}${solution.b}}, {\\color{green}${solution.d}})
+            i' = ({\\color{green}${a}}, {\\color{green}${c}}), \\; j' = ({\\color{green}${b}}, {\\color{green}${d}})
             \\]
         `;
 
@@ -588,6 +588,11 @@ document.addEventListener('DOMContentLoaded', (event) => {
             animationId = null;
         }
 
+        // If user already won, animate to their solution; otherwise use computed solution
+        const userAlreadyWon = gameWon;
+        const userVecX = { ...unitVectorX };
+        const userVecY = { ...unitVectorY };
+
         isShowingSolution = true;
         isAnimating = true;
         hasMovedVector = true;
@@ -597,16 +602,29 @@ document.addEventListener('DOMContentLoaded', (event) => {
         unitVectorX = { ...initialUnitVectorX };
         unitVectorY = { ...initialUnitVectorY };
 
+        // Pick which solution values to display and animate to
+        let a, b, c, d, targetX, targetY;
+        if (userAlreadyWon) {
+            a = Math.round(userVecX.x / baseVectorLength);
+            b = Math.round(userVecY.x / baseVectorLength);
+            c = Math.round(-userVecX.y / baseVectorLength);
+            d = Math.round(-userVecY.y / baseVectorLength);
+            targetX = userVecX;
+            targetY = userVecY;
+        } else {
+            a = solution.a; b = solution.b; c = solution.c; d = solution.d;
+            targetX = { x: solution.a * baseVectorLength, y: -solution.c * baseVectorLength };
+            targetY = { x: solution.b * baseVectorLength, y: -solution.d * baseVectorLength };
+        }
+
         // Hide win message and timer immediately (no space preserved)
         document.querySelector('.game-info').style.display = 'none';
 
         // Show solution text right away, before animation begins
-        showSolutionText();
+        showSolutionText(a, b, c, d);
 
         const startX = { ...unitVectorX };
         const startY = { ...unitVectorY };
-        const targetX = { x: solution.a * baseVectorLength, y: -solution.c * baseVectorLength };
-        const targetY = { x: solution.b * baseVectorLength, y: -solution.d * baseVectorLength };
         const duration = 1500; // ms
         const startTime = performance.now();
 
