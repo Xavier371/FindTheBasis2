@@ -153,25 +153,33 @@ canvas {
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-/* Solution panel — floats as top layer, no box */
+/* Solution panel — mobile first: static, below canvas */
 #solutionOverlay {
     display: none;
-    position: fixed;
-    top: 16px;
-    right: 16px;
-    left: auto;
-    bottom: auto;
-    transform: none;
-    width: 300px;
+    position: static;
+    width: 100%;
     background: transparent;
     border: none;
     box-shadow: none;
     padding: 0;
     text-align: center;
-    font-size: 16px;
+    font-size: 14px;
     font-family: Arial, sans-serif;
     z-index: 1000;
     pointer-events: none;
+    margin: 8px 0 16px;
+}
+
+/* Desktop/tablet: fixed top-right */
+@media (min-width: 769px) {
+    #solutionOverlay {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        width: 300px;
+        font-size: 16px;
+        margin: 0;
+    }
 }
 
 #solutionHeader {
@@ -207,16 +215,6 @@ canvas {
     margin: 0;
     padding: 4px 0 0;
     border-top: 1px solid rgba(0,0,0,0.15);
-}
-
-/* Mobile: flows below the canvas as a normal element */
-@media (max-width: 768px) {
-    #solutionOverlay {
-        position: static;
-        width: 100%;
-        font-size: 12px;
-        margin: 6px 0 16px;
-    }
 }
 
 /* Mobile responsiveness */
