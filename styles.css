@@ -33,7 +33,6 @@ h1 {
     justify-content: center;
     align-items: center;
     gap: 15px;
-    min-height: 30px;
 }
 
 .game-info span {
@@ -43,27 +42,6 @@ h1 {
 #winMessage {
     color: #4CAF50;
     font-weight: bold;
-    font-size: 24px;
-    padding: 10px 20px;
-    border-radius: 8px;
-    background-color: rgba(74, 175, 80, 0.1);
-    box-shadow: 0 0 10px rgba(74, 175, 80, 0.2);
-    animation: winPulse 2s infinite;
-}
-
-@keyframes winPulse {
-    0% {
-        transform: scale(1);
-        box-shadow: 0 0 10px rgba(74, 175, 80, 0.2);
-    }
-    50% {
-        transform: scale(1.05);
-        box-shadow: 0 0 20px rgba(74, 175, 80, 0.4);
-    }
-    100% {
-        transform: scale(1);
-        box-shadow: 0 0 10px rgba(74, 175, 80, 0.2);
-    }
 }
 
 .button-container {
@@ -86,11 +64,11 @@ button {
     font-size: 16px;
     font-family: Arial, sans-serif;
     cursor: pointer;
-    background-color: #4CAF50 !important;
+    background-color: #1e3a8a !important;
     color: white !important;
     border: none;
-    border-radius: 5px;
-    transition: background-color 0.3s;
+    border-radius: 8px;
+    transition: all 0.3s ease;
     text-align: center;
     width: 120px;
     height: 45px;
@@ -102,13 +80,16 @@ button {
     pointer-events: auto !important;
     -webkit-appearance: none;
     -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 2px 4px rgba(30, 58, 138, 0.3);
 }
 
 button:hover, button:active, button:disabled, button[disabled] {
-    background-color: #45a049 !important;
+    background-color: #1e40af !important;
     color: white !important;
     opacity: 1 !important;
     cursor: pointer !important;
+    box-shadow: 0 4px 8px rgba(30, 58, 138, 0.4);
+    transform: translateY(-1px);
 }
 
 canvas {
@@ -130,7 +111,7 @@ canvas {
     transform: translate(-50%, -50%);
     background: white;
     padding: 40px;
-    border: 2px solid #4CAF50;
+    border: 2px solid #1e3a8a;
     border-radius: 10px;
     z-index: 1000;
     width: 80%;
@@ -172,19 +153,70 @@ canvas {
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
+/* Solution panel — floats as top layer, no box */
+#solutionOverlay {
+    display: none;
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    left: auto;
+    bottom: auto;
+    transform: none;
+    width: 300px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    text-align: center;
+    font-size: 16px;
+    font-family: Arial, sans-serif;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+#solutionHeader {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: #444;
+    margin-bottom: 2px;
+}
+
 #equationContainer {
     text-align: center;
-    margin: 20px 0;
-    font-size: 18px;
 }
 
-/* Solution overlay specific styles */
-#solutionOverlay {
-    text-align: center;
+#equation {
+    margin: 0;
+    padding: 0;
 }
 
-#equation, #equationText, #vectorMapping {
-    margin: 20px 0;
+#equationText {
+    margin: 0;
+    padding: 4px 0 0;
+    border-top: 1px solid rgba(0,0,0,0.15);
+}
+
+#solutionText {
+    margin: 0;
+    padding: 4px 0 0;
+}
+
+#vectorMapping {
+    margin: 0;
+    padding: 4px 0 0;
+    border-top: 1px solid rgba(0,0,0,0.15);
+}
+
+/* Mobile: flows below the canvas as a normal element */
+@media (max-width: 768px) {
+    #solutionOverlay {
+        position: static;
+        width: 100%;
+        font-size: 12px;
+        margin: 6px 0 16px;
+    }
 }
 
 /* Mobile responsiveness */
@@ -238,7 +270,7 @@ canvas {
         padding: 8px;
         font-size: 15px;
         margin: 0;
-        background-color: #4CAF50 !important;
+        background-color: #1e3a8a !important;
         color: white !important;
         opacity: 1 !important;
         -webkit-appearance: none;
@@ -248,11 +280,13 @@ canvas {
         -webkit-tap-highlight-color: transparent;
         cursor: pointer !important;
         pointer-events: auto !important;
+        box-shadow: 0 2px 4px rgba(30, 58, 138, 0.3);
     }
 
     button:active {
-        background-color: #45a049 !important;
+        background-color: #1e40af !important;
         transform: translateY(1px);
+        box-shadow: 0 1px 2px rgba(30, 58, 138, 0.4);
     }
 
     #howToPlayButton {
@@ -285,11 +319,6 @@ canvas {
         -ms-user-select: none;
         user-select: none;
     }
-
-    #winMessage {
-        font-size: 18px;
-        padding: 8px 15px;
-    }
 }
 
 /* Remove duplicate media queries */
@@ -317,7 +346,7 @@ canvas {
     .overlay {
         background: #333;
         color: #fff;
-        border-color: #4CAF50;
+        border-color: #1e3a8a;
     }
 
     .tutorial-gif {
