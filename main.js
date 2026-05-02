@@ -553,9 +553,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
         unitVectorX = { ...initialUnitVectorX };
         unitVectorY = { ...initialUnitVectorY };
 
-        // Hide win message and timer immediately
-        document.getElementById('winMessage').style.visibility = 'hidden';
-        document.getElementById('timer').style.visibility = 'hidden';
+        // Hide win message and timer immediately (no space preserved)
+        document.querySelector('.game-info').style.display = 'none';
 
         // Show solution text right away, before animation begins
         showSolutionText();
@@ -648,8 +647,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         isShowingSolution = false;
         hasMovedVector = false;
         
-        document.getElementById('winMessage').style.visibility = '';
-        document.getElementById('timer').style.visibility = '';
+        document.querySelector('.game-info').style.display = '';
         document.getElementById('winMessage').innerText = '';
         document.getElementById('timer').innerText = `Timer: ${elapsedTime} seconds`;
         document.getElementById('instructionsOverlay').style.display = 'none';
