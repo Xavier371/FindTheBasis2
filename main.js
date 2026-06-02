@@ -29,6 +29,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
     let lastDragged = null;
     let isAnimating = false;
     let animationId = null;
+    let winTimeoutId = null;
+    let dragJustEnded = false;
+    let lastShownSolution = { a: null, b: null, c: null, d: null };
     
     function getScaledPoint(event, rect) {
         let x, y;
@@ -287,7 +290,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
             unitVectorY.y !== initialUnitVectorY.y
         );
 
-        if (isShowingSolution) drawTransformedGrid();
+        if (isShowingSolution || gameWon) drawTransformedGrid();
 
         drawAxes();
 
@@ -379,7 +382,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     function handlePointerMove(event) {
         event.preventDefault();
-        if (dragging && !isPaused && !gameWon) {
+        if (dragging && !isPaused && !isAnimating && !(gameWon && !isShowingSolution)) {
             const rect = canvas.getBoundingClientRect();
             let point;
             
@@ -411,7 +414,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     function handlePointerStart(event) {
         event.preventDefault();
-        if (gameWon || isPaused) return;
+        if (isPaused || isAnimating || (gameWon && !isShowingSolution)) return;
 
         const rect = canvas.getBoundingClientRect();
         const point = getScaledPoint(event, rect);
@@ -473,10 +476,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     function handlePointerEnd(event) {
         event.preventDefault();
-        if (!gameWon) {
-            dragging = null;
-            draw();
-        }
+        dragJustEnded = dragging !== null;
+        dragging = null;
+        draw();
+        dragJustEnded = false;
     }
 
     // Add global mouse move and up handlers to handle dragging outside canvas
@@ -498,13 +501,36 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     function checkWinCondition(transformedPoint) {
         if (isAnimating) return;
-        if (Math.round(transformedPoint.x) === redPoint.x &&
-            Math.round(transformedPoint.y) === redPoint.y) {
-            gameWon = true;
+        const rx = Math.round(transformedPoint.x);
+        const ry = Math.round(transformedPoint.y);
+        if (rx !== redPoint.x || ry !== redPoint.y) return;
+
+        const a = Math.round(unitVectorX.x / baseVectorLength);
+        const b = Math.round(unitVectorY.x / baseVectorLength);
+        const c = Math.round(-unitVectorX.y / baseVectorLength);
+        const d = Math.round(-unitVectorY.y / baseVectorLength);
+
+        // toggleSolution temporarily sets gameWon=false during animation;
+        // capture state first then always restore it.
+        const wasAlreadyWon = gameWon;
+        gameWon = true;
+
+        // Same solution already displayed — nothing to do
+        if (a === lastShownSolution.a && b === lastShownSolution.b &&
+            c === lastShownSolution.c && d === lastShownSolution.d) return;
+
+        if (!wasAlreadyWon) {
+            // First win: lock screen (gameWon && !isShowingSolution guards drag),
+            // show message, then play transformation after 800ms
             stopTimer();
             document.getElementById('winMessage').innerText =
                 'Congratulations! You won in ' + elapsedTime + ' seconds! ';
-            if (!isShowingSolution) setTimeout(toggleSolution, 500);
+            clearTimeout(winTimeoutId);
+            winTimeoutId = setTimeout(toggleSolution, 800);
+        } else if (dragJustEnded) {
+            // Post-win: user dragged and released on a new valid solution
+            clearTimeout(winTimeoutId);
+            winTimeoutId = setTimeout(toggleSolution, 0);
         }
     }
 
@@ -581,7 +607,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 
     function toggleSolution() {
-        // Cancel any in-progress animation
+        // Cancel any pending win timeout and in-progress animation
+        clearTimeout(winTimeoutId);
+        winTimeoutId = null;
         if (animationId) {
             cancelAnimationFrame(animationId);
             animationId = null;
@@ -616,11 +644,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
             targetY = { x: solution.b * baseVectorLength, y: -solution.d * baseVectorLength };
         }
 
-        // Hide win message and timer immediately (no space preserved)
-        document.querySelector('.game-info').style.display = 'none';
 
         // Show solution text right away, before animation begins
         showSolutionText(a, b, c, d);
+        lastShownSolution = { a, b, c, d };
 
         const startX = { ...unitVectorX };
         const startY = { ...unitVectorY };
@@ -683,7 +710,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
     document.getElementById('resetButton').addEventListener('click', () => {
         isFirstGame = false;
 
-        // Cancel any solve animation
+        // Cancel any pending win timeout and in-progress animation
+        clearTimeout(winTimeoutId);
+        winTimeoutId = null;
         if (animationId) {
             cancelAnimationFrame(animationId);
             animationId = null;
@@ -707,6 +736,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         isShowingInstructions = false;
         isShowingSolution = false;
         hasMovedVector = false;
+        lastShownSolution = { a: null, b: null, c: null, d: null };
         
         document.querySelector('.game-info').style.display = '';
         document.getElementById('winMessage').innerText = '';
