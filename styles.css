@@ -6,6 +6,10 @@ body {
     min-height: 100vh;
     font-family: Arial, sans-serif;
     padding: 20px;
+    padding-top: max(20px, env(safe-area-inset-top, 0px));
+    padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
+    padding-left: max(20px, env(safe-area-inset-left, 0px));
+    padding-right: max(20px, env(safe-area-inset-right, 0px));
     background-color: #f0f0f0;
 }
 
@@ -81,6 +85,7 @@ button {
     pointer-events: auto !important;
     -webkit-appearance: none;
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
     box-shadow: 0 2px 4px rgba(30, 58, 138, 0.3);
 }
 
@@ -93,10 +98,39 @@ button:hover, button:active, button:disabled, button[disabled] {
     transform: translateY(-1px);
 }
 
+#zoomControl {
+    position: fixed;
+    top: max(20px, env(safe-area-inset-top, 0px));
+    right: max(20px, env(safe-area-inset-right, 0px));
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 1001;
+}
+
+.zoom-btn {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    padding: 0;
+    font-size: 20px;
+    line-height: 1;
+}
+
+.zoom-level-display {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e3a8a;
+    min-width: 38px;
+    text-align: center;
+    font-family: Arial, sans-serif;
+}
+
 canvas {
     border: 1px solid black;
     background-color: white;
     touch-action: none;
+    cursor: grab;
     margin: 20px 0;
     max-width: 100%;
     height: auto;
@@ -155,6 +189,10 @@ canvas {
 }
 
 /* Solution panel — mobile first: static card, below canvas */
+#solutionOverlay.has-solution {
+    display: block;
+}
+
 #solutionOverlay {
     display: none;
     position: static;
@@ -184,11 +222,11 @@ canvas {
     }
 }
 
-/* Large desktop: fixed top-right card */
+/* Large desktop: fixed top-right card, below the zoom control */
 @media (min-width: 1200px) {
     #solutionOverlay {
         position: fixed;
-        top: 20px;
+        top: 72px;
         right: 20px;
         width: 290px;
         max-width: 290px;
@@ -261,12 +299,6 @@ canvas {
         text-align: center;
     }
 
-    .button-container {
-        flex-direction: column;
-        padding: 0 10px;
-        margin: 8px 0;
-    }
-
     .button-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -302,12 +334,6 @@ canvas {
         background-color: #1e40af !important;
         transform: translateY(1px);
         box-shadow: 0 1px 2px rgba(30, 58, 138, 0.4);
-    }
-
-    #howToPlayButton {
-        width: 100%;
-        margin-bottom: 8px;
-        font-size: 16px;
     }
 
     .overlay {

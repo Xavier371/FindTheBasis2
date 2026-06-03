@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Interactive Transformation</title>
     <link rel="stylesheet" href="styles.css">
     <script>
@@ -24,6 +23,11 @@
             <button id="pauseButton">Pause</button>
             <button id="solveButton">Solve</button>
         </div>
+    </div>
+    <div id="zoomControl">
+        <button id="zoomOutButton" class="zoom-btn">−</button>
+        <span class="zoom-level-display">100%</span>
+        <button id="zoomInButton" class="zoom-btn">+</button>
     </div>
     <div class="game-info">
         <span id="winMessage"></span>
