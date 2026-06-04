@@ -598,8 +598,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
     function toggleInstructions() {
         isShowingInstructions = !isShowingInstructions;
         document.getElementById('instructionsOverlay').style.display = isShowingInstructions ? 'block' : 'none';
-        if (isShowingInstructions) { isPaused = true; }
-        else                       { isPaused = false; draw(); }
+        if (isShowingInstructions) {
+            isPaused = true;
+            setSolutionOverlayVisible(false);
+        } else {
+            isPaused = false;
+            if (isShowingSolution || gameWon) setSolutionOverlayVisible(true);
+            draw();
+        }
     }
 
     function setSolutionOverlayVisible(visible) {
@@ -650,6 +656,11 @@ document.addEventListener('DOMContentLoaded', (event) => {
         const userAlreadyWon = gameWon;
         const userVecX = { ...unitVectorX };
         const userVecY = { ...unitVectorY };
+
+        if (!userAlreadyWon) {
+            stopTimer();
+            document.getElementById('timer').style.display = 'none';
+        }
 
         isShowingSolution = true;
         isAnimating = true;
@@ -763,6 +774,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
         document.querySelector('.game-info').style.display = '';
         document.getElementById('winMessage').innerText = '';
+        document.getElementById('timer').style.display = '';
         document.getElementById('timer').innerText = `Timer: ${elapsedTime} seconds`;
         document.getElementById('instructionsOverlay').style.display = 'none';
         setSolutionOverlayVisible(false);
