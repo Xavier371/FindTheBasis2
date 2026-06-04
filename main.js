@@ -38,8 +38,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
     let dragJustEnded = false;
     let lastShownSolution = { a: null, b: null, c: null, d: null };
 
-    let pinchStartDist = null;
-    let pinchStartZoom = null;
+    let lastPinchDist = null;
+    let lastPinchCenter = null;
 
     // Pan state
     let panning = false;
@@ -373,27 +373,30 @@ document.addEventListener('DOMContentLoaded', (event) => {
     function handlePointerMove(event) {
         event.preventDefault();
 
-        // Two-finger pinch zoom
+        // Two-finger pinch zoom + pan
         if (event.touches && event.touches.length === 2) {
-            if (pinchStartDist) {
-                const dist = Math.hypot(
-                    event.touches[0].clientX - event.touches[1].clientX,
-                    event.touches[0].clientY - event.touches[1].clientY
-                );
-                const rect = canvas.getBoundingClientRect();
-                const scaleX = canvas.width / canvas.clientWidth;
-                const scaleY = canvas.height / canvas.clientHeight;
-                const cx = ((event.touches[0].clientX + event.touches[1].clientX) / 2 - rect.left) * scaleX;
-                const cy = ((event.touches[0].clientY + event.touches[1].clientY) / 2 - rect.top) * scaleY;
-                const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, pinchStartZoom * dist / pinchStartDist));
-                if (newZoom !== zoom) {
-                    origin.x = cx - (cx - origin.x) * newZoom / zoom;
-                    origin.y = cy - (cy - origin.y) * newZoom / zoom;
-                    zoom = newZoom;
-                    updateZoomDisplay();
-                    draw();
-                }
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = width / canvas.clientWidth;
+            const scaleY = height / canvas.clientHeight;
+            const t0 = event.touches[0], t1 = event.touches[1];
+            const newDist = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
+            const newCx = ((t0.clientX + t1.clientX) / 2 - rect.left) * scaleX;
+            const newCy = ((t0.clientY + t1.clientY) / 2 - rect.top) * scaleY;
+
+            if (lastPinchDist !== null) {
+                const factor = newDist / lastPinchDist;
+                const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom * factor));
+                const actualScale = newZoom / zoom;
+                // Zoom around previous center, translate to new center (handles simultaneous pan)
+                origin.x = newCx - (lastPinchCenter.x - origin.x) * actualScale;
+                origin.y = newCy - (lastPinchCenter.y - origin.y) * actualScale;
+                zoom = newZoom;
+                updateZoomDisplay();
+                draw();
             }
+
+            lastPinchDist = newDist;
+            lastPinchCenter = { x: newCx, y: newCy };
             return;
         }
 
@@ -448,11 +451,15 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
         // Two-finger: start pinch
         if (event.touches && event.touches.length === 2) {
-            pinchStartDist = Math.hypot(
-                event.touches[0].clientX - event.touches[1].clientX,
-                event.touches[0].clientY - event.touches[1].clientY
-            );
-            pinchStartZoom = zoom;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = width / canvas.clientWidth;
+            const scaleY = height / canvas.clientHeight;
+            const t0 = event.touches[0], t1 = event.touches[1];
+            lastPinchDist = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
+            lastPinchCenter = {
+                x: ((t0.clientX + t1.clientX) / 2 - rect.left) * scaleX,
+                y: ((t0.clientY + t1.clientY) / 2 - rect.top) * scaleY
+            };
             dragging = null;
             panning = false;
             panStart = null;
@@ -514,8 +521,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     function handlePointerEnd(event) {
         event.preventDefault();
-        pinchStartDist = null;
-        pinchStartZoom = null;
+        lastPinchDist = null;
+        lastPinchCenter = null;
         dragJustEnded = dragging !== null;
         dragging = null;
         panning = false;
@@ -731,8 +738,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
         dragging = null;
         panning = false;
         panStart = null;
-        pinchStartDist = null;
-        pinchStartZoom = null;
+        lastPinchDist = null;
+        lastPinchCenter = null;
 
         const points = generateValidPoints();
         bluePoint = points.bluePoint;

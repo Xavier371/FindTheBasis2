@@ -273,6 +273,10 @@ canvas {
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
+    #zoomControl {
+        display: none;
+    }
+
     body {
         padding: 10px;
     }
